@@ -23,18 +23,36 @@ class User(db.Model):
             # do not serialize the password, its a security breach
         }
 
+#PeopleTab-----------------------------------------
+
 class People(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    height = db.Column(db.Float)
     mass = db.Column(db.Float)
+    hair_color  = db.Column(String(20))
+    skin_color  = db.Column(String(20))
+    eye_color  = db.Column(String(20))
+    birth_year = db.Column(Integer)
+    gender = db.Column(String(20))
+    homeworld = db.Column(String(250))
     people_favorite = db.relationship("Favorite_People", backref="people")
 
-    def serialize(self):
+    def serialize(self):     #peopleserialize------------------------------------------------------------------
         return {
             "id": self.id,
             "name": self.name,
-            "mass": self.mass          
+            "height": self.height,
+            "mass": self.mass,
+            "hair_color": self.hair_color,
+            "skin_color": self.skin_color,
+            "eye_color": self.eye_color,
+            "birth_year": self.birth_year,
+            "gender": self.gender,
+            "homeworld": self.homeworld
         }
+
+#FavoritePeopleTab-----------------------------------------------------------------------------------------------
 
 class Favorite_People(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -42,12 +60,14 @@ class Favorite_People(db.Model):
     people_id = db.Column(db.Integer, db.ForeignKey('people.id'))
     #Esta es una tabla pivote para relacionar User y People, relación muchos a muchos
 
-    def serialize(self):
+    def serialize(self): #FavPepSerialize-------------------------------------------------------------------------------------------------------------------------------------------
         return {
             "id": self.id,
             "user_email": User.query.get(self.user_id).serialize()['email'],
             "character_name": People.query.get(self.people_id).serialize()['name']          
         } 
+
+#PlanetsTab-----------------------------------------
 
 class Planets (db.Model): 
     id = db.Column(db.Integer, primary_key=True)
@@ -60,7 +80,7 @@ class Planets (db.Model):
     climate = db.Column(db.String(100))
     terrain = db.Column(db.String(100))
     surface_Water = db.Column(db.Integer)
-    planets_favorite = db.relationship("Favorite_Planets", backref="planet") 
+    planets_favorite = db.relationship("Favorite_Planets", backref="planets") 
 
     def serialize(self):
         return {
@@ -86,13 +106,58 @@ class Favorite_Planets(db.Model):
         return {
             "id": self.id,
             "user_email": User.query.get(self.user_id).serialize()['email'],
-            "planet_name": Planets.query.get(self.planet_id).serialize()['name']   
-            "planet_diameter": Planets.query.get(self.planet_id).serialize()['diameter']   
-            "planet_rotation_Period": Planets.query.get(self.planet_id).serialize()['rotation_Period']   
-            "planet_orbital_Period": Planets.query.get(self.planet_id).serialize()['orbital_Period']   
-            "planet_gravity": Planets.query.get(self.planet_id).serialize()['gravity']   
-            "planet_population": Planets.query.get(self.planet_id).serialize()['population']   
-            "planet_climate": Planets.query.get(self.planet_id).serialize()['climate']   
-            "planet_terrain": Planets.query.get(self.planet_id).serialize()['terrain']   
-            "planet_surface_Water": Planets.query.get(self.planet_id).serialize()['surface_Water']   
+            "planet_name": Planets.query.get(self.planet_id).serialize()['name'],   
+            "planet_diameter": Planets.query.get(self.planet_id).serialize()['diameter'],   
+            "planet_rotation_Period": Planets.query.get(self.planet_id).serialize()['rotation_Period'],   
+            "planet_orbital_Period": Planets.query.get(self.planet_id).serialize()['orbital_Period'],   
+            "planet_gravity": Planets.query.get(self.planet_id).serialize()['gravity'],   
+            "planet_population": Planets.query.get(self.planet_id).serialize()['population'],   
+            "planet_climate": Planets.query.get(self.planet_id).serialize()['climate'],   
+            "planet_terrain": Planets.query.get(self.planet_id).serialize()['terrain'],   
+            "planet_surface_Water": Planets.query.get(self.planet_id).serialize()['surface_Water'],   
         }    
+
+#VehiclesTab-------------------------------------------------------------------------------------------------------------------------
+
+class Vehicles(db.Model): 
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False) 
+    model = db.Column(db.String(100))
+    vehicle_class = db.Column(db.String(100))
+    manufacturer = db.Column(db.String(100))
+    cost_in_credits = db.Column(db.Integer(100))
+    crew = db.Column(db.Integer(100))
+    passengers = db.Column(db.String(100))
+    max_atmosphering_speed = db.Column(db.String(100))
+    cargo_capacity = db.Column(db.String(100))
+    consumables = db.Column(db.String(100))
+    
+
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,  
+            "model": self.model,
+            "vehicle_class": self.vehicle_class,
+            "manufacturer": self.manufacturer,
+            "cost_in_credits": self.cost_in_credits,
+            "crew": self.crew,
+            "passengers": self.passengers,
+            "max_atmosphering_speed": self.max_atmosphering_speed,
+            "cargo_capacity": self.cargo_capacity   
+            "consumables": self.consumables   
+               
+        } 
+
+class Favorite_Vehicles(db.Model): 
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id')) #con el nombre de la tabla user y atributo id
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id'))    
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_email": User.query.get(self.user_id).serialize()['email'],
+            "vehicle_name": Vehicles.query.get(self.vehicles_id).serialize()['name']
+        }     
