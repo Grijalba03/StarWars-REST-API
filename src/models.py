@@ -9,6 +9,8 @@ class User(db.Model):
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
     description = db.Column(db.String(120), unique=False, nullable=False)
     user_favorite = db.relationship("Favorite_People", backref="user")
+    user_favorite_planets = db.relationship("Favorite_Planets", backref="user")
+    user_favorite_vehicles = db.relationship("Favorite_Vehicles", backref="user")
 
     #de manera automática, el nombre de la tabla es el nombre de la clase en minúscula
     def __repr__(self):
@@ -107,14 +109,7 @@ class Favorite_Planets(db.Model):
             "id": self.id,
             "user_email": User.query.get(self.user_id).serialize()['email'],
             "planet_name": Planets.query.get(self.planet_id).serialize()['name'],   
-            "planet_diameter": Planets.query.get(self.planet_id).serialize()['diameter'],   
-            "planet_rotation_Period": Planets.query.get(self.planet_id).serialize()['rotation_Period'],   
-            "planet_orbital_Period": Planets.query.get(self.planet_id).serialize()['orbital_Period'],   
-            "planet_gravity": Planets.query.get(self.planet_id).serialize()['gravity'],   
-            "planet_population": Planets.query.get(self.planet_id).serialize()['population'],   
-            "planet_climate": Planets.query.get(self.planet_id).serialize()['climate'],   
-            "planet_terrain": Planets.query.get(self.planet_id).serialize()['terrain'],   
-            "planet_surface_Water": Planets.query.get(self.planet_id).serialize()['surface_Water'],   
+           
         }    
 
 #VehiclesTab-------------------------------------------------------------------------------------------------------------------------
@@ -131,7 +126,7 @@ class Vehicles(db.Model):
     max_atmosphering_speed = db.Column(db.String(100))
     cargo_capacity = db.Column(db.String(100))
     consumables = db.Column(db.String(100))
-    
+    vehicles_favorite = db.relationship("Favorite_Vehicles", backref="vehicle") 
 
 
     def serialize(self):
@@ -160,4 +155,5 @@ class Favorite_Vehicles(db.Model):
             "id": self.id,
             "user_email": User.query.get(self.user_id).serialize()['email'],
             "vehicle_name": Vehicles.query.get(self.vehicles_id).serialize()['name']
+            
         }     
