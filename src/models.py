@@ -32,12 +32,12 @@ class People(db.Model):
     name = db.Column(db.String(100), nullable=False)
     height = db.Column(db.Float)
     mass = db.Column(db.Float)
-    hair_color  = db.Column(String(20))
-    skin_color  = db.Column(String(20))
-    eye_color  = db.Column(String(20))
-    birth_year = db.Column(Integer)
-    gender = db.Column(String(20))
-    homeworld = db.Column(String(250))
+    hair_color  = db.Column(db.String(20))
+    skin_color  = db.Column(db.String(20))
+    eye_color  = db.Column(db.String(20))
+    birth_year = db.Column(db.Integer)
+    gender = db.Column(db.String(20))
+    homeworld = db.Column(db.String(250))
     people_favorite = db.relationship("Favorite_People", backref="people")
 
     def serialize(self):     #peopleserialize------------------------------------------------------------------
@@ -101,7 +101,7 @@ class Planets (db.Model):
 class Favorite_Planets(db.Model): 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id')) #con el nombre de la tabla user y atributo id
-    planet_id = db.Column(db.Integer, db.ForeignKey('planet.id'))
+    planet_id = db.Column(db.Integer, db.ForeignKey('planets.id'))
 
 
     def serialize(self):
@@ -120,13 +120,13 @@ class Vehicles(db.Model):
     model = db.Column(db.String(100))
     vehicle_class = db.Column(db.String(100))
     manufacturer = db.Column(db.String(100))
-    cost_in_credits = db.Column(db.Integer(100))
-    crew = db.Column(db.Integer(100))
+    cost_in_credits = db.Column(db.Integer)
+    crew = db.Column(db.Integer)
     passengers = db.Column(db.String(100))
     max_atmosphering_speed = db.Column(db.String(100))
     cargo_capacity = db.Column(db.String(100))
     consumables = db.Column(db.String(100))
-    vehicles_favorite = db.relationship("Favorite_Vehicles", backref="vehicle") 
+    vehicles_favorite = db.relationship("Favorite_Vehicles", backref="vehicles") 
 
 
     def serialize(self):
@@ -140,7 +140,7 @@ class Vehicles(db.Model):
             "crew": self.crew,
             "passengers": self.passengers,
             "max_atmosphering_speed": self.max_atmosphering_speed,
-            "cargo_capacity": self.cargo_capacity   
+            "cargo_capacity": self.cargo_capacity,   
             "consumables": self.consumables   
                
         } 
@@ -148,7 +148,7 @@ class Vehicles(db.Model):
 class Favorite_Vehicles(db.Model): 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id')) #con el nombre de la tabla user y atributo id
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id'))    
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'))    
 
     def serialize(self):
         return {
