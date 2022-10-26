@@ -71,7 +71,7 @@ def create_new_user():
     db.session.add(new_user) 
     db.session.commit()
     
-    return jsonify({"mensaje": "Usuario creado exitósamente"}), 201
+    return jsonify({"mensaje": "Usuario creado exitosamente"}), 201
 
 @app.route('/user/<int:user_id>', methods=['GET'])
 def get_user_by_id(user_id):
@@ -93,69 +93,60 @@ def delete_user_by_id(user_id):
     #print(user.serialize())
     db.session.delete(user)
     db.session.commit()
-    return jsonify("usuario eliminado exitósamente"), 200
+    return jsonify("usuario eliminado exitosamente"), 200
 
-#GETFunction to pull Characters
+#Función get para llamar a todos los personajes de la base de datos
 @app.route('/people', methods=['GET'])
 def get_people():
     peoples = People.query.all()
     #print(users)
     peoples = list(map( lambda people: people.serialize(), peoples)) 
     #print(users)  
-    return jsonify(peoples), 200  
+    return jsonify(peoples), 200
 
-
-#GETFunction to pull characters INDIVIDUALLY
+#Función get para llamar personajes individualmente de la base de datos
 @app.route('/people/<int:people_id>', methods=['GET'])
 def get_people_by_id(people_id):
     if people_id==0:
         raise APIException("Id no puede ser igual a 0", status_code=400)  
     person = People.query.get(people_id)
     if person == None:
-        raise APIException("Character doesnt exist", status_code=400)  
+        raise APIException("El usuario no existe", status_code=400)  
     return jsonify(person.serialize()), 200
 
-
-#GETFunction to pull Planets
+#Función get para llamar a todos los planetas de la base de datos
 @app.route('/planets', methods=['GET'])
 def get_planets():
     planets = Planets.query.all()
-    #print(users)
-    planets = list(map( lambda planet: planet.serialize(), planets)) 
-    #print(users)  
+    planets = list(map( lambda planet: planet.serialize(), planets))  
     return jsonify(planets), 200
 
-
-#GETFunction to pull planets INDIVIDUALLY
-@app.route('/planet/<int:planets_id>', methods=['GET'])
-def get_planets_by_id(planets_id): 
+#Función get para llamar planetas individualmente de la base de datos
+@app.route('/planet/<int:planet_id>', methods=['GET'])
+def get_planet_by_id(planet_id):
     if planet_id==0:
-        raise APIException("Id no puede ser igual a 0", status_code=400)
-    planet = Planet.query.get(planet_id)
-    if planets == None:
-        raise APIException("Planet doesnt exist", status_code=400)
-    return jsonify(planet.serialize()), 200  
+        raise APIException("Id no puede ser igual a 0", status_code=400)  
+    planet = Planets.query.get(planet_id)
+    if planet == None:
+        raise APIException("El planeta no existe", status_code=400)  
+    return jsonify(planet.serialize()), 200
 
-
-#GETFunction to pull Vehicles
+#Función get para llamar a todos los vehículos de la base de datos
 @app.route('/vehicles', methods=['GET'])
 def get_vehicles():
     vehicles = Vehicles.query.all()
-    #print(users)
-    vehicles = list(map(lambda vehicle: vehicle.serialize(), vehicles))
+    vehicles = list(map( lambda vehicle: vehicle.serialize(), vehicles))  
     return jsonify(vehicles), 200
 
-
-#GETFunction to pull vehicles INDIVIDUALLY
-@app.route('/vehicles/<int:vehicles_id>', methods=['GET'])
-def get_vehicles_by_id(vehicles_id): 
-    if vehicles_id==0:
-        raise APIException("Id no puede ser igual a 0", status_code=400)
+#Función get para llamar vehículos individualmente de la base de datos
+@app.route('/vehicle/<int:vehicle_id>', methods=['GET'])
+def get_vehicle_by_id(vehicle_id):
+    if vehicle_id==0:
+        raise APIException("Id no puede ser igual a 0", status_code=400)  
     vehicle = Vehicles.query.get(vehicle_id)
-    if vehicles == None:
-        raise APIException("Vehicle doesnt exist", status_code=400)
-    return jsonify(vehicle.serialize()), 200  
-
+    if vehicle == None:
+        raise APIException("El vehículo no existe", status_code=400)  
+    return jsonify(vehicle.serialize()), 200
 
 #Función get para llamar a la lista de personajes favoritos del usuario
 @app.route('/user/favorites', methods=['GET'])
@@ -170,7 +161,6 @@ def get_favorites():
     print(favorites_list)
     return jsonify(favorites_list), 200
 
-    
 #Funciones para agregar items a cada tabla (personajes, planetas, vehículos)
 
 #Función post para agregar personajes individuales a la base de datos
@@ -187,9 +177,9 @@ def create_new_person():
     characters = People.query.all()
     characters = list(map( lambda character: character.serialize(), characters))
 
-    for i in range(len(characters)):
-        if(characters[i]['name']==new_character.serialize()['name']):
-            raise APIException("El personaje ya existe" , status_code=400)
+    # for i in range(len(characters)):
+    #     if(characters[i]['name']==new_character.serialize()['name']):
+    #         raise APIException("El personaje ya existe" , status_code=400)
             
     print(new_character)
     #print(new_user.serialize())
@@ -325,10 +315,42 @@ def delete_favorite_vehicle_by_id(item_id):
     return jsonify("Vehículo eliminado exitosamente"), 200
 
 
-#DEJAR ESTA TABLA AL FINAL**********************************************************************************************************************************************************************
+#Función get para actualizar personajes individualmente de la base de datos
+@app.route('/people/<int:people_id>', methods=['PUT'])
+def put_people_by_id(people_id):
+    if people_id==0:
+        raise APIException("Id no puede ser igual a 0", status_code=400)  
+    person = People.query.get(people_id)#buscar por ID es la manera mas eficiente de realizar busquedas en las bases de datos
+    if person == None:
+        raise APIException("El usuario no existe", status_code=400) 
+    body = request.get_json()
+    #validaciones
+    if body is None:
+        raise APIException("Body está vacío" , status_code=400)
+    #validamos si viene el campo name en el body o no (despues de hacer el request.get_json())
+    if not body['name'] is None:
+        person.name = body['name']
+    db.session.commit()     
+    return jsonify(person.serialize()), 200
+
+
+@app.route('/people/busqueda', methods=['POST'])
+def busqueda_people():
+    body = request.get_json()
+    #validaciones
+    if body is None:
+        raise APIException("Body está vacío" , status_code=400)
+    if not body['name'] is None:    
+        found = People.query.filter(People.name==body['name']).all() #va a encontrar todas las coincidencias        
+        found = list(map( lambda item: item.serialize(), found))
+        print(found)
+    if found == None:
+        raise APIException("El personaje no existe", status_code=400)  
+    return jsonify(found), 200
+
+
+# esta linea SIEMPRE DEBE QUEDAR AL FINAL   
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
-    app.run(host='0.0.0.0', port=PORT, debug=False) 
-
-    
+    app.run(host='0.0.0.0', port=PORT, debug=False)

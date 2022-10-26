@@ -55,6 +55,7 @@ class People(db.Model):
         }
 
 #FavoritePeopleTab-----------------------------------------------------------------------------------------------
+#This table is used to create the relationship between user/favorites (many to many)
 
 class Favorite_People(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -97,6 +98,8 @@ class Planets (db.Model):
             "terrain": self.terrain,
             "surface_Water": self.surface_Water   
         } 
+
+#This table is used to create the relationship between user/favorites/planets (many to many)        
 
 class Favorite_Planets(db.Model): 
     id = db.Column(db.Integer, primary_key=True)
@@ -144,6 +147,8 @@ class Vehicles(db.Model):
             "consumables": self.consumables   
                
         } 
+
+#This table is used to create the relationship between user/favorites (many to many)
 
 class Favorite_Vehicles(db.Model): 
     id = db.Column(db.Integer, primary_key=True)
