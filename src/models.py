@@ -38,7 +38,10 @@ class People(db.Model):
     birth_year = db.Column(db.Integer)
     gender = db.Column(db.String(20))
     homeworld = db.Column(db.String(250))
-    people_favorite = db.relationship("Favorite_People", backref="people")
+    people_favorite = db.relationship("Favorite_People", backref="people") 
+
+    def __repr__(self):
+        return '<People %r>' % self.name
 
     def serialize(self):     #peopleserialize------------------------------------------------------------------
         return {

@@ -8,10 +8,25 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, People, Favorite_People, Planets, Favorite_Planets, Vehicles, Favorite_Vehicles
+from models import db, User, People, Favorite_People, Planets, Favorite_Planets, Vehicles, Favorite_Vehicles, TokenBlockedList
+from datetime import date, time, datetime, timezone
 #from models import Person
 
+#importar jwt-flask-extended
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
+
+#importar Bcrypt para encriptar
+from flask_bcrypt import Bcrypt
+
 app = Flask(__name__)
+
+# Setup the Flask-JWT-Extended extension
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")  # Change this!
+jwt = JWTManager(app)
+
+# Setup de Bcrypt
+bcrypt = Bcrypt(app)
+
 app.url_map.strict_slashes = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -41,37 +56,45 @@ def handle_hello():
     }   
     return jsonify(users), 200
 
+
+
 @app.route('/user', methods=['POST'])
 def create_new_user():
     body = request.get_json()
     #print(body['username']) 
     descripcion=""
+    try:
+        if body is None or "email" not in body:
+            raise APIException("Body está vacío o email no viene en el body, es inválido" , status_code=400)
+        if body['email'] is None or body['email']=="":
+            raise APIException("email es inválido" , status_code=400)
+        if body['password'] is None or body['password']=="":
+            raise APIException("password es inválido" , status_code=400)
+        if body['description'] is None or body['description']=="":
+            descripcion="no hay descripción"
+        else:
+            descripcion=body['description']
 
-    if body is None or "email" not in body:
-        raise APIException("Body está vacío o email no viene en el body, es inválido" , status_code=400)
-    if body['email'] is None or body['email']=="":
-        raise APIException("email es inválido" , status_code=400)
-    if body['password'] is None or body['password']=="":
-        raise APIException("password es inválido" , status_code=400)
-    if body['description'] is None or body['description']=="":
-        descripcion="no hay descripción"
-    else:
-        descripcion=body['description']
+        password = bcrypt.generate_password_hash(body['password'],10).decode("utf-8")
 
-    new_user = User(email=body['email'], password=body['password'], is_active=True, description=descripcion)
-    users = User.query.all()
-    users = list(map( lambda user: user.serialize(), users))
+        new_user = User(email=body['email'], password=password, is_active=True, description=descripcion)
+        users = User.query.all()
+        users = list(map( lambda user: user.serialize(), users))
 
-    for i in range(len(users)):
-        if(users[i]['email']==new_user.serialize()['email']):
-            raise APIException("El usuario ya existe" , status_code=400)
-            
-    print(new_user)
-    #print(new_user.serialize())
-    db.session.add(new_user) 
-    db.session.commit()
-    
-    return jsonify({"mensaje": "Usuario creado exitosamente"}), 201
+        for i in range(len(users)):
+            if(users[i]['email']==new_user.serialize()['email']):
+                raise APIException("El usuario ya existe" , status_code=400)
+                
+        print(new_user)
+        #print(new_user.serialize())
+        db.session.add(new_user) 
+        db.session.commit()
+        return jsonify({"mensaje": "Usuario creado exitosamente"}), 201
+
+    except Exception as err:
+        db.session.rollback()
+        print(err)
+        return jsonify({"mensaje": "error al registrar usuario"}), 500
 
 @app.route('/user/<int:user_id>', methods=['GET'])
 def get_user_by_id(user_id):
@@ -346,7 +369,92 @@ def busqueda_people():
         print(found)
     if found == None:
         raise APIException("El personaje no existe", status_code=400)  
-    return jsonify(found), 200
+    return jsonify(found), 200 
+
+
+#Heres the login route--------------------------------------------------------------------------------------------------
+@app.route('/login', methods=['POST'])
+def login():
+    body = request.get_json()
+    email = body['email']
+    password = body['password']
+
+    user = User.query.filter_by(email=email).first()
+
+    if user is None:
+        raise APIException("usuario no existe", status_code=401)
+    
+    #validamos el password si el usuario existe y si coincide con el de la base de datos.------------------------------
+    if not bcrypt.check_password_hash(user.password, password):
+        raise APIException("usuario o password no coinciden", status_code=401)
+
+    access_token = create_access_token(identity= user.id)
+    return jsonify({"token": access_token})
+
+
+#Heres the protected route----------------------------------------------------------------------------------------------    
+@app.route('/helloprotected', methods=['GET']) #endpoint
+@jwt_required() #decorador que protege al endpoint
+def hello_protected(): #definición de la función
+    #claims = get_jwt()
+    print("id del usuario:", get_jwt_identity()) #imprimiendo la identidad del usuario que es el id
+    user = User.query.get(get_jwt_identity()) #búsqueda del id del usuario en la base de datos
+
+    #get_jwt() regresa un diccionario, y una propiedad importante es jti
+    jti=get_jwt()["jti"] 
+
+    tokenBlocked = TokenBlockedList.query.filter_by(token=jti).first()
+    #cuando hay coincidencia tokenBloked es instancia de la clase TokenBlockedList
+    #cuando No hay coincidencia tokenBlocked = None
+
+    if isinstance(tokenBlocked, TokenBlockedList):
+        return jsonify(msg="Acceso Denegado")
+
+    response_body={
+        "message":"token válido",
+        "user_id": user.id, #get_jwt_identity(),
+        "user_email": user.email,
+        "description": user.description
+    }
+
+    return jsonify(response_body), 200 
+
+
+
+#Heres thee logout route---------------------------------------------------------------------------------------------
+@app.route('/logout', methods=['get']) #endpoint
+@jwt_required()
+def logout():
+    print(get_jwt())
+    jti=get_jwt()["jti"]
+    now = datetime.now(timezone.utc)
+
+    tokenBlocked = TokenBlockedList(token=jti, created_at=now)
+    db.session.add(tokenBlocked)
+    db.session.commit()
+
+    return jsonify({"message":"token bloqueado"})   
+
+
+#Heres the route to suspend/reactivate users---------------------------------------------------------------------------------
+@app.route('/suspendido/<int:user_id>', methods=['PUT']) #endpoint
+@jwt_required()
+def user_suspended(user_id):
+    if get_jwt_identity() != 1:
+        return jsonify({"message":"Operación no permitida"}), 403
+        
+    user = User.query.get(user_id)
+   
+    #validamos si viene el campo name en el body o no (despues de hacer el request.get_json())
+    if user.is_active:
+        user.is_active = False
+        db.session.commit()   
+        return jsonify({"message":"Usuario suspendido"}), 203
+    else:
+        user.is_active = True
+        db.session.commit()   
+        return jsonify({"message":"Usuario reactivado"}), 203
+
 
 
 # esta linea SIEMPRE DEBE QUEDAR AL FINAL   
