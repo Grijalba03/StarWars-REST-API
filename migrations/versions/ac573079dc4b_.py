@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 1bce28c8b6dd
+Revision ID: ac573079dc4b
 Revises: 
-Create Date: 2022-10-27 02:09:02.708703
+Create Date: 2022-10-29 01:22:52.804737
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '1bce28c8b6dd'
+revision = 'ac573079dc4b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -43,6 +43,13 @@ def upgrade():
     sa.Column('terrain', sa.String(length=100), nullable=True),
     sa.Column('surface_Water', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('token_blocked_list',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('token', sa.String(length=250), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('token')
     )
     op.create_table('user',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -101,6 +108,7 @@ def downgrade():
     op.drop_table('favorite__people')
     op.drop_table('vehicles')
     op.drop_table('user')
+    op.drop_table('token_blocked_list')
     op.drop_table('planets')
     op.drop_table('people')
     # ### end Alembic commands ###

@@ -66,7 +66,7 @@ class Favorite_People(db.Model):
     people_id = db.Column(db.Integer, db.ForeignKey('people.id'))
     #Esta es una tabla pivote para relacionar User y People, relación muchos a muchos
 
-    def serialize(self): #FavPepSerialize-------------------------------------------------------------------------------------------------------------------------------------------
+    def serialize(self): #Favorite_People_Serialize-------------------------------------------------------------------------------------------------------------------------------------------
         return {
             "id": self.id,
             "user_email": User.query.get(self.user_id).serialize()['email'],
@@ -164,4 +164,16 @@ class Favorite_Vehicles(db.Model):
             "user_email": User.query.get(self.user_id).serialize()['email'],
             "vehicle_name": Vehicles.query.get(self.vehicles_id).serialize()['name']
             
-        }     
+        }  
+
+class TokenBlockedList(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    token= db.Column(db.String(250), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "token": self.token,
+            "created_at": self.created_at
+        }           

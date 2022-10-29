@@ -13,7 +13,11 @@ from datetime import date, time, datetime, timezone
 #from models import Person
 
 #importar jwt-flask-extended
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import JWTManager
+from flask_jwt_extended import create_access_token 
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import get_jwt_identity, get_jwt
+
 
 #importar Bcrypt para encriptar
 from flask_bcrypt import Bcrypt
@@ -372,7 +376,7 @@ def busqueda_people():
     return jsonify(found), 200 
 
 
-#Heres the login route--------------------------------------------------------------------------------------------------
+#Here's the login route--------------------------------------------------------------------------------------------------
 @app.route('/login', methods=['POST'])
 def login():
     body = request.get_json()
@@ -392,7 +396,7 @@ def login():
     return jsonify({"token": access_token})
 
 
-#Heres the protected route----------------------------------------------------------------------------------------------    
+#Here's the protected route----------------------------------------------------------------------------------------------    
 @app.route('/helloprotected', methods=['GET']) #endpoint
 @jwt_required() #decorador que protege al endpoint
 def hello_protected(): #definición de la función
@@ -421,7 +425,7 @@ def hello_protected(): #definición de la función
 
 
 
-#Heres thee logout route---------------------------------------------------------------------------------------------
+#Heres the logout route---------------------------------------------------------------------------------------------
 @app.route('/logout', methods=['get']) #endpoint
 @jwt_required()
 def logout():
@@ -436,7 +440,7 @@ def logout():
     return jsonify({"message":"token bloqueado"})   
 
 
-#Heres the route to suspend/reactivate users---------------------------------------------------------------------------------
+#Here's the route to suspend/reactivate users---------------------------------------------------------------------------------
 @app.route('/suspendido/<int:user_id>', methods=['PUT']) #endpoint
 @jwt_required()
 def user_suspended(user_id):
